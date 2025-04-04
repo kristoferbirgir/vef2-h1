@@ -211,7 +211,6 @@ app.get('/images/median', requireAuth, async (c) => {
   return c.json({ median })
 })
 
-
 const port = Number(process.env.PORT || 3000)
 process.env.PORT = port.toString()
 
