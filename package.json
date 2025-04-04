@@ -12,8 +12,7 @@
     "update:check": "npx npm-check-updates",
     "update:deps": "npx npm-check-updates -u && npm install"
   },
-  "prisma": {
-  },
+  "prisma": {},
   "dependencies": {
     "@hono/zod-validator": "^0.4.3",
     "@types/bcryptjs": "^2.4.6",
