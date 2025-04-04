@@ -1,6 +1,6 @@
 import request from 'supertest';
 import { serve } from '@hono/node-server';
-import app from '../../src/app.js';
+import app from '../../src/index.js';
 import prisma from '../../src/utils/prisma.js';
 import { signToken } from '../../src/utils/jwt.js';
 import bcrypt from 'bcryptjs';
