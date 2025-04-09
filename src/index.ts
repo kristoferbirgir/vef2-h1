@@ -13,7 +13,8 @@ const app = new Hono()
 app.use('*', cors({
   origin: ['https://krabs.netlify.app'],
   allowMethods: ['GET','POST','PUT','DELETE','OPTIONS'],
-  allowHeaders: ['Content-Type', 'Authorization']
+  allowHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
 }))
 
 app.use('*', async (c, next) => {
