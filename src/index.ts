@@ -247,22 +247,52 @@ serve(app, (info) => {
 
 app.get('/images/rated', requireAuth, async (c) => {
   const userId = String(c.user!.id)
-
-
-  const ratings = await prisma.rating.findMany({
+  
+  // Get all ratings made by the current user, including the image details.
+  const userRatings = await prisma.rating.findMany({
     where: { userId },
     include: { image: true },
   })
 
-  const ratedImages = ratings.map(r => ({
-    id: r.image.id,
-    url: r.image.url,
-    prompt: r.image.prompt,
-    currentRating: r.score,
-  }))
+  // For each rated image, compute the aggregate rating data.
+  const ratedImages = await Promise.all(
+    userRatings.map(async (r) => {
+      const imageId = r.image.id
+
+      // Count the total likes for this image.
+      const likeCount = await prisma.rating.count({
+        where: {
+          imageId,
+          score: 1
+        }
+      })
+
+      // Count the total dislikes for this image.
+      const dislikeCount = await prisma.rating.count({
+        where: {
+          imageId,
+          score: -1
+        }
+      })
+
+      const totalVotes = likeCount + dislikeCount
+      const likePercentage = totalVotes === 0 ? 0 : (likeCount / totalVotes) * 100
+
+      return {
+        id: imageId,
+        url: r.image.url,
+        prompt: r.image.prompt,
+        currentRating: r.score,
+        likeCount,
+        dislikeCount,
+        likePercentage
+      }
+    })
+  )
 
   return c.json(ratedImages)
 })
+
 
 
 export default app
