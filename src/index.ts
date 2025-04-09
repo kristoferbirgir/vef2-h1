@@ -22,9 +22,7 @@ app.use('*', async (c, next) => {
   if (isRateLimited(ip)) {
     return c.json({ error: 'Too many requests' }, 429)
   }
-
   await next()
-
   c.header('Content-Security-Policy', "default-src 'self'")
   c.header('X-Content-Type-Options', 'nosniff')
   c.header('X-Frame-Options', 'DENY')
@@ -212,11 +210,59 @@ app.get('/images/median', requireAuth, async (c) => {
   return c.json({ median })
 })
 
+/* NEW ENDPOINT: Get ratings breakdown (likes, dislikes, percentage) for a specific image */
+app.get('/images/:id/ratings', requireAuth, async (c) => {
+  const id = c.req.param('id')
+
+  // Verify the image exists.
+  const image = await prisma.image.findUnique({ where: { id } })
+  if (!image) {
+    return c.json({ error: 'Image not found' }, 404)
+  }
+
+  // Count likes (score === 1) and dislikes (score === -1) for the specified image.
+  const likeCount = await prisma.rating.count({
+    where: { imageId: id, score: 1 }
+  })
+  const dislikeCount = await prisma.rating.count({
+    where: { imageId: id, score: -1 }
+  })
+
+  const totalVotes = likeCount + dislikeCount
+  const likePercentage = totalVotes === 0 ? 0 : (likeCount / totalVotes) * 100
+
+  return c.json({
+    likeCount,
+    dislikeCount,
+    likePercentage
+  })
+})
+
 const port = Number(process.env.PORT || 3000)
 process.env.PORT = port.toString()
 
 serve(app, (info) => {
   console.log(`Server running on http://${info.address}:${info.port}`)
 })
+
+app.get('/images/rated', requireAuth, async (c) => {
+  const userId = String(c.user!.id)
+
+
+  const ratings = await prisma.rating.findMany({
+    where: { userId },
+    include: { image: true },
+  })
+
+  const ratedImages = ratings.map(r => ({
+    id: r.image.id,
+    url: r.image.url,
+    prompt: r.image.prompt,
+    currentRating: r.score,
+  }))
+
+  return c.json(ratedImages)
+})
+
 
 export default app
