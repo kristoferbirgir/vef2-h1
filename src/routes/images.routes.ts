@@ -20,7 +20,7 @@ cloudinary.config(cloudinaryConfig);
 const VALID_MIME_TYPES = ['image/jpeg', 'image/png'];
 const MAX_FILE_SIZE = 5 * 1024 * 1024; 
 
-imageApi.post("/cloudinary", requireAuth, requireAdmin, async (c) => {
+imageApi.post("/", requireAuth, requireAdmin, async (c) => {
   try {
     const { file, name }: { file: File; name?: string } = await c.req.parseBody();
     
